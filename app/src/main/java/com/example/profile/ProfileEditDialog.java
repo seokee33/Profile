@@ -53,16 +53,15 @@ public class ProfileEditDialog extends Dialog implements View.OnClickListener {
     @Override
     public void onClick(View v) {
         switch (v.getId()) {
-            case R.id.btn_Camera: //확인 버튼을 눌렀을 때
-                //인터페이스의 함수를 호출하여 변수에 저장된 값들을 Activity로 전달
+            case R.id.btn_Camera:   //인터페이스 함수 호출하여 결과값을 MainActivity에 반환
                 profileEditDialogListener.onPositiveClicked("Camera");
                 dismiss();
                 break;
-            case R.id.btn_Gallery: //취소 버튼을 눌렀을 때
+            case R.id.btn_Gallery:  //인터페이스 함수 호출하여 결과값을 MainActivity에 반환
                 profileEditDialogListener.onPositiveClicked("Gallery");
                 dismiss();
                 break;
-            case R.id.iv_Cancel://종료
+            case R.id.iv_Cancel:    //종료
                 profileEditDialogListener.onNegativeClicked();
                 dismiss();
                 break;

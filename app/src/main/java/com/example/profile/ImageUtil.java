@@ -9,22 +9,24 @@ import android.net.Uri;
 import android.os.Bundle;
 import android.provider.MediaStore;
 import android.util.Log;
+import android.widget.ImageView;
 
 import androidx.core.content.FileProvider;
 
 import java.io.File;
+import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
 import java.io.IOException;
 
 public class ImageUtil {
     private static ImageUtil imageUtil = null;
     private Context context;
 
-    private String filePath;
-
     private ImageUtil(Context context) {
         this.context = context;
     }
 
+    //싱글톤 패턴으로 구현
     public static ImageUtil getInstance(Context context) {
         if (imageUtil == null) {
             imageUtil = new ImageUtil(context);
@@ -32,41 +34,44 @@ public class ImageUtil {
         return imageUtil;
     }
 
-    public boolean makeFile() {
-        // 촬영한 사진을 저장할 파일 생성
-        File photoFile = null;
+    //인앱 저장소에 프로필 사진이 있는지..(있으면 Bitmap 반환, 없으면 null 반환)
+    public Bitmap getImageDir() {
+        File fileFile = new File(context.getFilesDir() + "/Profile.jpg");
 
-        try {
-            //임시로 사용할 파일이므로 경로는 캐시폴더로
-            File tempDir = context.getCacheDir();
-
-            //프로파일 세팅
-            String imageFileName = "Profile_";
-
-            File tempImage = File.createTempFile(
-                    imageFileName,  /* 파일이름 */
-                    ".jpg",         /* 파일형식 */
-                    tempDir      /* 경로 */
-            );
-
-            // ACTION_VIEW 인텐트를 사용할 경로 (임시파일의 경로)
-            filePath = tempImage.getAbsolutePath();
-
-            photoFile = tempImage;
-
-        } catch (IOException e) {
-            //에러 로그는 이렇게 관리하는 편이 좋다.
-            Log.w("FilePathError", "파일 생성 에러!", e);
+        if (fileFile.exists()) {
+            Bitmap bitmap = BitmapFactory.decodeFile(fileFile.getAbsolutePath());
+            return bitmap;
         }
-
-        //파일이 정상적으로 생성되었다면 계속 진행
-        if (photoFile != null) {
-            return true;
-
-        }
-        return false;
+        return null;
     }
 
+    //Bitmap과 파일이름을 받아서 인앱 저장소에 저장하는 함수
+    public void saveBitmapToJpeg(Bitmap bitmap, String name) {
+        //내부저장소 캐시 경로를 받아옵니다.
+        File storage = context.getFilesDir();
+
+        //저장할 파일 이름
+        String fileName = name + ".jpg";
+
+        //storage 에 파일 인스턴스를 생성합니다.
+        File tempFile = new File(storage, fileName);
+
+        try {
+            // 자동으로 빈 파일을 생성합니다.
+            tempFile.createNewFile();
+            // 파일을 쓸 수 있는 스트림을 준비합니다.
+            FileOutputStream out = new FileOutputStream(tempFile);
+            // compress 함수를 사용해 스트림에 비트맵을 저장합니다.
+            bitmap.compress(Bitmap.CompressFormat.JPEG, 100, out);
+            out.close();//Stream 종료
+        } catch (FileNotFoundException e) {
+            Log.e("ImageUtil_SaveBitmapToJpeg", "FileNotFoundException : " + e.getMessage());
+        } catch (IOException e) {
+            Log.e("ImageUtil_SaveBitmapToJpeg", "IOException : " + e.getMessage());
+        }
+    }
+
+    //Intent data : 겔러리로 부터 받은 경로값을 받아와서 Bitmap으로 변환하여 반환
     public Bitmap getGallery(Intent data) {
         Uri selectedImage = data.getData();
         String[] filePathColumn = {MediaStore.Images.Media.DATA};
@@ -74,13 +79,13 @@ public class ImageUtil {
                 filePathColumn, null, null, null);
 
         if (cursor == null || cursor.getCount() < 1) {
-            return null; // no cursor or no record. DO YOUR ERROR HANDLING
+            return null;
         }
         cursor.moveToFirst();
         int columnIndex = cursor.getColumnIndex(filePathColumn[0]);
 
-        if (columnIndex < 0) // no column index
-            return null; // DO YOUR ERROR HANDLING
+        if (columnIndex < 0)
+            return null; //
 
         //선택한 파일 경로
         String picturePath = cursor.getString(columnIndex);
@@ -89,6 +94,7 @@ public class ImageUtil {
         return bitmap;
     }
 
+    //카메라로 부터 값을 받아와서 Bitmap으로 변환
     public Bitmap getCamera(Intent data) {
         Bundle extras = data.getExtras();
         Bitmap bitmap = (Bitmap) extras.get("data");

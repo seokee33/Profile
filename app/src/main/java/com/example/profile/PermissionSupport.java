@@ -23,7 +23,7 @@ public class PermissionSupport {
         this.activity = activity;
     }
 
-
+    //싱글톤패턴
     public static PermissionSupport getInstance(Context context, Activity activity) {
         if (permissionSupport == null) {
             permissionSupport = new PermissionSupport(context, activity);
@@ -32,15 +32,14 @@ public class PermissionSupport {
     }
 
 
-    // Manifset에 권한을 작성 후
-    // 요청할 권한을 배열로 저장
+    //권한 내용들을 배열에 추가
     private String[] permissions = {
             Manifest.permission.CAMERA,
             Manifest.permission.WRITE_EXTERNAL_STORAGE,
             Manifest.permission.READ_EXTERNAL_STORAGE,
     };
 
-    // 권한 요청을 할 때 발생하는 창에 대한 결과값
+    // 권한 요청후 결과값을 넣는곳
     private List<Object> permissionList;
 
     private final int MULTIPLE_PERMISSIONS = 1023;
